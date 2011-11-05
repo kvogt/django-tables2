@@ -600,9 +600,10 @@ Which, when displayed in a browser, would look something like this:
 +-----------------------+--------------------------+
 
 
-For complicated columns, it's sometimes necessary to return HTML from a :meth:`~Column.render` method, but the string
-must be marked as safe (otherwise it will be escaped when the table is
-rendered). This can be achieved by using the :func:`mark_safe` function.
+For complicated columns, it's sometimes necessary to return HTML from a
+:meth:`~Column.render` method, but the string must be marked as safe (otherwise
+it will be escaped when the table is rendered). This can be achieved by using
+the :func:`mark_safe` function.
 
 .. code-block:: python
 
@@ -621,7 +622,7 @@ Custom Template
 
 And of course if you want full control over the way the table is rendered,
 ignore the built-in generation tools, and instead pass an instance of your
-:class:`Table` subclass into your own template, and render it yourself:
+:class:`.Table` subclass into your own template, and render it yourself:
 
 .. code-block:: django
 
@@ -688,20 +689,36 @@ Template tags
 render_table
 ------------
 
-Renders a :class:`~django_tables2.tables.Table` object to HTML and includes as
-many features as possible.
-
-Sample usage:
+Renders a :class:`~django_tables2.tables.Table` object to HTML and enables as
+many features in the output as possible.
 
 .. code-block:: django
 
     {% load django_tables2 %}
     {% render_table table %}
 
-This tag temporarily modifies the :class:`.Table` object while it is being
-rendered. It adds a ``request`` attribute to the table, which allows
-:class:`Column` objects to have access to a ``RequestContext``. See
-:class:`.TemplateColumn` for an example.
+    {# Alternatively a specific template can be used #}
+    {% render_table table "path/to/custom_table_template.html" %}
+
+This tag temporarily modifies the ``Table`` object while it is being rendered.
+It adds a ``request`` attribute to the table, which allows :class:`Column`
+objects to have access to a ``RequestContext``. See :class:`.TemplateColumn`
+for an example.
+
+.. note::
+
+    The ``{% render_table %}`` tag also allows a Django template to be
+    specified via an optional second parameter. This template will be used
+    (instead of the default) when rendering the table.
+
+    For example to render a table using to the template
+    ``app/my_custom_template.html``, you would write::
+
+        {% render_table mytable "app/my_custom_template.html" %}
+
+    The template is rendered using a context containing a ``table`` variable.
+    When writing the template it may be helpful to refer to
+    ``django_tables2/table.html`` as an example.
 
 This tag requires that the template in which it's rendered contains the
 ``HttpRequest`` inside a ``request`` variable. This can be achieved by ensuring
@@ -746,8 +763,6 @@ we want to update the ``sort`` parameter:
     {% set_url_param sort="dob" %}         # ?search=pirates&sort=dob&page=5
     {% set_url_param sort="" %}            # ?search=pirates&page=5
     {% set_url_param sort="" search="" %}  # ?page=5
-
-
 
 A table instance bound to data has two attributes ``columns`` and ``rows``,
 which can be iterated over:
@@ -1323,4 +1338,3 @@ Upgrading from django-tables Version 1
   .. code-block:: django
 
       {{ column.order_by.is_descending }} and {{ column.order_by.is_ascending }}
-

@@ -146,8 +146,15 @@ def querystring(parser, token):
 
 
 class RenderTableNode(Node):
-    def __init__(self, table):
+    """
+    :param         table: the table to render
+    :type          table: Table object
+    :param template_name: Name[s] of template to render
+    :type  template_name: unicode or list
+    """
+    def __init__(self, table, template_name):
         self.table = table
+        self.template_name = template_name
 
     def render(self, context):
         try:
@@ -160,10 +167,15 @@ class RenderTableNode(Node):
                         " contains the HttpRequest in a 'request' variable, "
                         "check your TEMPLATE_CONTEXT_PROCESSORS setting.")
             context = Context({"request": context["request"], "table": table})
-            # HACK! :(
+
             try:
-                table.request = context["request"]
-                return get_template("django_tables2/table.html").render(context)
+                if isinstance(self.template_name, basestring):
+                    template = get_template(self.template_name)
+                else:
+                    # assume some iterable was given
+                    template = select_template(self.template_name)
+                table.request = context["request"]  # HACK! :(
+                return template.render(context)
             finally:
                 del table.request
         except:
@@ -176,6 +188,14 @@ class RenderTableNode(Node):
 @register.tag
 def render_table(parser, token):
     bits = token.split_contents()
-    if len(bits) != 2:
-        raise TemplateSyntaxError("'%s' requires one argument." % bits[0])
-    return RenderTableNode(parser.compile_filter(bits[1]))
+    if len(bits) not in (2, 3):
+        raise TemplateSyntaxError("'%s' requires either one or two arguments." % bits[0])
+
+    if len(bits) == 3:
+        template_name = bits[2]
+    else:
+        template_name = '"django_tables2/table.html"'  # default
+
+    return RenderTableNode(
+            parser.compile_filter(bits[1]),        # table
+            parser.compile_filter(template_name))  # template
