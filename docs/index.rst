@@ -72,7 +72,7 @@ write a view that would look something like:
                                   context_instance=RequestContext(request))
 
 In your template, the easiest way to :term:`render` the table is via the
-:meth:`~django_tables2.tables.Table.as_html` method:
+:meth:`.Table.as_html` method:
 
 .. code-block:: django
 
@@ -90,10 +90,10 @@ In your template, the easiest way to :term:`render` the table is via the
 | Mexico       | 107        | UTC -6    | 0      |
 +--------------+------------+-----------+--------+
 
-This approach is easy, but it's not fully featured (e.g. no pagination, no
-sorting). Don't worry it's very easy to add these. First, you must render the
-table via the :ref:`template tag <template-tags.render_table>` rather than
-``as_html()``:
+This approach is easy, but it has a major problem in that it clobbers
+(overwrites) any existing querystring values when pagination or
+sorting are used. For these reasons you should use the :ref:`template tag
+<template-tags.render_table>` instead:
 
 .. code-block:: django
 
@@ -451,8 +451,8 @@ See :class:`.RequestConfig` for details.
 Pagination
 ==========
 
-Pagination is easy, just call :meth:`.Table.paginate` and pass in the current
-page number, e.g.
+Pagination is easy, just call :meth:`.Table.paginate` and
+pass in the current page number, e.g.
 
 .. code-block:: python
 
@@ -461,10 +461,6 @@ page number, e.g.
         table.paginate(page=request.GET.get('page', 1))
         return render_to_response('people_listing.html', {'table': table},
                                   context_instance=RequestContext(request))
-
-The last set is to render the table. :meth:`.Table.as_html` doesn't support
-pagination, so you must use :ref:`{% render_table %}
-<template-tags.render_table>`.
 
 .. _custom-rendering:
 
@@ -700,25 +696,15 @@ many features in the output as possible.
     {# Alternatively a specific template can be used #}
     {% render_table table "path/to/custom_table_template.html" %}
 
-This tag temporarily modifies the ``Table`` object while it is being rendered.
-It adds a ``request`` attribute to the table, which allows :class:`Column`
-objects to have access to a ``RequestContext``. See :class:`.TemplateColumn`
-for an example.
+If the second argument (template path) is given, the template will be rendered
+with a ``RequestContext`` and the table will be in the variable ``table``.
 
 .. note::
 
-    The ``{% render_table %}`` tag also allows a Django template to be
-    specified via an optional second parameter. This template will be used
-    (instead of the default) when rendering the table.
-
-    For example to render a table using to the template
-    ``app/my_custom_template.html``, you would write::
-
-        {% render_table mytable "app/my_custom_template.html" %}
-
-    The template is rendered using a context containing a ``table`` variable.
-    When writing the template it may be helpful to refer to
-    ``django_tables2/table.html`` as an example.
+    This tag temporarily modifies the ``Table`` object while it is being
+    rendered. It adds a ``request`` attribute to the table, which allows
+    :class:`Column` objects to have access to a ``RequestContext``. See
+    :class:`.TemplateColumn` for an example.
 
 This tag requires that the template in which it's rendered contains the
 ``HttpRequest`` inside a ``request`` variable. This can be achieved by ensuring
@@ -977,6 +963,7 @@ API Reference
 -----------------------
 
 .. autoclass:: django_tables2.tables.Table
+    :members:
 
 
 :class:`Table.Meta` Objects:
@@ -991,7 +978,7 @@ API Reference
 
         Allows custom HTML attributes to be specified which will be added to
         the ``<table>`` tag of any table rendered via
-        :meth:`~django_tables2.tables.Table.as_html` or the
+        :meth:`.Table.as_html` or the
         :ref:`template-tags.render_table` template tag.
 
         :type: ``dict``
@@ -1136,6 +1123,18 @@ API Reference
         .. note::
 
             This functionality is also available via the ``sortable`` keyword
+            argument to a table's constructor.
+
+    .. attribute:: template
+
+        The default template to use when rendering the table.
+
+        :type: ``unicode``
+        :default: ``django_tables2/table.html``
+
+        .. note::
+
+            This functionality is also available via the ``template`` keyword
             argument to a table's constructor.
 
 
