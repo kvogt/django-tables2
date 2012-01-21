@@ -228,7 +228,7 @@ class LinkColumn(Column):
         # and use that to decide whether to render a link or just the default
         try:
             raw = bound_column.accessor.resolve(record)
-        except (TypeError, AttributeError, KeyError, ValueError) as e:
+        except (TypeError, AttributeError, KeyError, ValueError):
             raw = None
         if raw is None:
             return self.default
