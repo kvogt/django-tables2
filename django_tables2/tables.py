@@ -15,6 +15,22 @@ from .columns import BoundColumns, Column
 
 QUERYSET_ACCESSOR_SEPARATOR = '__'
 
+# Fix for python2.5
+_property = property
+class property(property):
+    def __init__(self, fget, *args, **kwargs):
+        self.__doc__ = fget.__doc__
+        super(property, self).__init__(fget, *args, **kwargs)
+
+    def setter(self, fset):
+        cls_ns = sys._getframe(1).f_locals
+        for k, v in cls_ns.iteritems():
+            if v == self:
+                propname = k
+                break
+        cls_ns[propname] = property(self.fget, fset,
+                                    self.fdel, self.__doc__)
+        return cls_ns[propname]
 
 class TableData(object):
     """

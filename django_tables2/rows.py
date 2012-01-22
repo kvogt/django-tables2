@@ -145,10 +145,10 @@ class BoundRow(object):
 
         # just give a list of all available methods
         funcs = ifilter(curry(hasattr, inspect), ('getfullargspec', 'getargspec'))
-        spec = getattr(inspect, next(funcs))
+        spec = getattr(inspect, funcs.next())
         # only provide the arguments that the func is interested in
         kw = {}
-        for name in spec(render).args:
+        for name in spec(render)[0]:
             if name == 'self':
                 continue
             kw[name] = kwargs[name]()
